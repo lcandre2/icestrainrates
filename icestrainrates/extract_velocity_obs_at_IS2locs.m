@@ -4,12 +4,13 @@
 
 clear variables 
 close all
-clc
+%clc
 
 %% Read IS2 coordinates
 
 laser_xy = textread('is2locationdata/Pakistoq_Cycle_15_sample.txt');
 
+cd ~/Documents/Projects/satellite_uplift/scripts/icestrainrates/
 
 %% Quick check with a plot
 % 
@@ -65,7 +66,7 @@ for ii = 1:length(sortedindexmatrix)
     tmp = sortedindexmatrix(ii,:);
     tmp = tmp(~isnan(tmp));
     for jj = 1:2 %if the height is added, this becomes 3
-        meanmatrix(ii,jj) = mean(laser_xy(tmp,jj),1, 'omitnan');
+        centered_is2_locations(ii,jj) = mean(laser_xy(tmp,jj),1, 'omitnan');
     end
 end
 
@@ -82,15 +83,99 @@ end
 
 velocitydatasource = 1; % 1 = promice velocity ; 2 = go live velocity (give the actual data name) ; 3 a fun new dataset we dont know about yet
 
-pathtovelocity = 'icevelocitydata';
+pathtovelocity = '~/Documents/Projects/satellite_uplift/scripts/icestrainrates/icevelocitydata/';
 velocityfiletype = '*nc';
 
 
 v = readvelocitydata(velocitydatasource, pathtovelocity, velocityfiletype);
 
-%% 
+%% read ice thickness data
+
+thicknessdatasource = 1; %1 = bedmachine, 2 = ??
+
+pathtothickness = '~/Documents/Data/BedMachine/v5/';
+thicknessfiletype = '*nc';
+
+t = readicethicknessdata(thicknessdatasource, pathtothickness, thicknessfiletype);
+
+%% Now extract immediate thickness data 
+
+% provide a loose bounding box to increase computational efficiency (this
+% just increases the bounding box to 20km greater than the min and max of
+% the is2 cross overs
+xmax = max(centered_is2_locations(:,1), [], "all") + 20*1000; 
+xmin = min(centered_is2_locations(:,1), [], "all") - 20*1000;
+ymax = max(centered_is2_locations(:,2), [], "all") + 20*1000; 
+ymin = min(centered_is2_locations(:,2), [], "all") - 20*1000;
+
+%% figure to check
+
+% figure 
+% hold on
+% greenlandmap
+% scatter(laser_xy(:,1), laser_xy(:,2))
+% scatter(centered_is2_locations(:,1), centered_is2_locations(:,2), 40, 'r*')
+% scatter([xmin, xmax, xmax, xmin], [ymax, ymax, ymin, ymin], 60, 'g^')
+
+%% extract an regional thicknesses
+tmpthickx(:,1) = double(t.x);
+tmpthicky(:,1) = double(t.y);
+  tmpthickx((tmpthickx<xmin)) = NaN;
+  tmpthickx((tmpthickx>xmax)) = NaN;
+  tmpthicky((tmpthicky<ymin)) = NaN;
+  tmpthicky((tmpthicky>ymax)) = NaN;
 
 
+tmpthickxy(:,1) = tmpthickx(:);
+tmpthickxy(:,2) = tmpthicky(:);
+tmpthickxy(:,3) = t.thickness(:);
+
+tmpthickxy(any(isnan(tmpthickxy), 2), :) = [];
+
+for ii = 1:length(centered_is2_locations)
+    [index2(ii), distance2(ii)] = knnsearch(tmpthickxy(:,1:2), centered_is2_locations(ii,:), 'K', 1,'distance', 'euclidean');
+end
+
+thicknessesoflocations = tmpthickxy(index2,3);
+
+
+%% extract regional velocities
+
+% only need to crop the first one with values
+tmpvelx = double(v.x);
+tmpvely = double(v.y);
+  tmpvelx((tmpvelx<xmin)) = NaN;
+  tmpvelx((tmpvelx>xmax)) = NaN;
+  tmpvely((tmpvely<ymin)) = NaN;
+  tmpvely((tmpvely>ymax)) = NaN;
+
+
+tmpvelxy(:,1) = tmpthickx(:);
+tmpvelxy(:,2) = tmpthicky(:);
+for ii = 1:length(v)
+    tmpthickxy(:,ii+2) = v.e_vel;
+end
+
+
+
+for ii = 1:length(v)
+
+
+
+
+end
+
+
+%% figure to check
+
+figure 
+hold on
+greenlandmap
+scatter(tmpthickxy(:,1), tmpthickxy(:,2), 40, tmpthickxy(:,3), 'filled', 'MarkerEdgeColor', 'none')
+
+scatter(laser_xy(:,1), laser_xy(:,2))
+scatter(centered_is2_locations(:,1), centered_is2_locations(:,2), 40, 'r*')
+scatter([xmin, xmax, xmax, xmin], [ymax, ymax, ymin, ymin], 60, 'g^')
 
 
 
