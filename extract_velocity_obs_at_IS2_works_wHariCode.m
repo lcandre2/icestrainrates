@@ -165,17 +165,7 @@ u = vel.e_vel;
 v = vel.n_vel;
 
 %%
-if plotting == 1
-    % CJT edit as needed.
-    figure
-    hold on
-    greenlandmap
-    quiver(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
-    streamline(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
 
-end 
-
-%%
 
 %define a bounding box for each IS2 ROI/crossover location
 
@@ -192,38 +182,56 @@ topleft     = [vel_row(ii) - gridcellcount, vel_col(ii) + gridcellcount];
 %bottomleft  = [vel_row(ii) - gridcellcount, vel_col(ii) - gridcellcount];
 bottomright = [vel_row(ii) + gridcellcount, vel_col(ii) - gridcellcount];
 
-
-
-xp=0.2:0.1:0.6;yp=0.1:0.1:0.5;
-
 Xpi = vel.x(topleft(1):bottomright(1), bottomright(2):topleft(2));
 Ypi = vel.y(topleft(1):bottomright(1), bottomright(2): topleft(2));
 Xp=Xpi;Yp=Ypi;
 %____________
 %CJT dt and nt need to be defined based on the velocity data
 %_____________
-dt=0.1;nt=20;%time step for advection and number of steps
+
+%currently dt is in DAYS, just like the velocity data is in m/DAY.
+dt=vel.tbands(2) - vel.tbands(1);
+nt=20;%time step for advection and number of steps
 
 for it=1:nt%advecting for nt time-steps
-    %plot(Xp,Yp,'c.')%just for tracking motion to visualize - would not use in actual code
-    %pause(0.2)
+
     %integrating dx/dt=u,dy/dt=v over a time step dt using Improved Euler Integration
     %look up interp2 - interpolating from velocity grid to stake position
     %up, vp - velocities at positions at beginning of time-step
-    up=interp2(X,Y,u,Xp,Yp);vp=interp2(X,Y,v,Xp,Yp);
+    %up=interp2(X,Y,u,Xp,Yp);
+    %vp=interp2(X,Y,v,Xp,Yp);
+    
+    up = vel.e_vel(topleft(1):bottomright(1), bottomright(2):topleft(2));
+    vp = vel.n_vel(topleft(1):bottomright(1), bottomright(2):topleft(2));
+
+    
+    
     %first step of Improved Euler is Forward Euler 
-    Xpstar=Xp+up*dt;Ypstar=Yp+vp*dt;
+    Xpstar=Xp+up*dt;
+    Ypstar=Yp+vp*dt;
     %second step of Improved Euler
-    upstar=interp2(X,Y,u,Xpstar,Ypstar);vpstar=interp2(X,Y,v,Xpstar,Ypstar);
+
+    upstar=interp2(X,Y,u,Xpstar,Ypstar);
+    vpstar=interp2(X,Y,v,Xpstar,Ypstar);
     %final positions after each Improved Euler Time Step
-    Xp=Xp+(up+upstar)/2*dt;Yp=Yp+(vp+vpstar)/2*dt;
+    Xp=Xp+(up+upstar)/2*dt;
+    Yp=Yp+(vp+vpstar)/2*dt;
 end
 %plot final position after nt timesteps
-plot(Xp,Yp,'r*')
 
 
 
 
+
+if plotting == 1
+    % CJT edit as needed.
+    figure
+    hold on
+    greenlandmap
+    quiver(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
+    streamline(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
+    plot(Xp,Yp,'r*')
+end 
 
 
 
