@@ -173,25 +173,35 @@ ROIhalflength = thicknessesoflocations(ii) .* couplinglengthscale;
 
 gridcellcount = ceil(ROIhalflength ./ vel.pixelsize);  %decide if round, ceiling or floor is the best option
 
-indlocCent  = [vel_row(ii), vel_col(ii)];
+
 %these labels might not be correct depending on the sign of x and y (e.g.
 %the sign of the northing and easting in the projected velocity data, but
 %the grid will still center correctly
 topleft     = [vel_row(ii) - gridcellcount, vel_col(ii) + gridcellcount];
-%topright    = [vel_row(ii) + gridcellcount, vel_col(ii) + gridcellcount];
-%bottomleft  = [vel_row(ii) - gridcellcount, vel_col(ii) - gridcellcount];
+topright    = [vel_row(ii) + gridcellcount, vel_col(ii) + gridcellcount];
+bottomleft  = [vel_row(ii) - gridcellcount, vel_col(ii) - gridcellcount];
 bottomright = [vel_row(ii) + gridcellcount, vel_col(ii) - gridcellcount];
+centloc  = [vel_row(ii), vel_col(ii)];
 
-Xpi = vel.x(topleft(1):bottomright(1), bottomright(2):topleft(2));
-Ypi = vel.y(topleft(1):bottomright(1), bottomright(2): topleft(2));
-Xp=Xpi;Yp=Ypi;
+%%CJT check to see if lines 180-184 are correctly defining the strain
+%%diamond
+
+
+%% CJT check to see if in the right order on lines 188 and 189
+Xpi = [X(centloc), X(topleft), X(topright), X(bottomright), X(bottomleft)];
+Ypi = [Y(centloc), Y(topleft), Y(topright), Y(bottomright), Y(bottomleft)];
+
+Xp=Xpi;
+Yp=Ypi;
+
 %____________
 %CJT dt and nt need to be defined based on the velocity data
 %_____________
 
 %currently dt is in DAYS, just like the velocity data is in m/DAY.
 dt=vel.tbands(2) - vel.tbands(1);
-nt=20;%time step for advection and number of steps
+
+nt=dt * 2;%time step for advection and number of steps---CJT find the most appropriate nt this should also be in DAYS
 
 for it=1:nt%advecting for nt time-steps
 
@@ -201,18 +211,19 @@ for it=1:nt%advecting for nt time-steps
     %up=interp2(X,Y,u,Xp,Yp);
     %vp=interp2(X,Y,v,Xp,Yp);
     
-    up = vel.e_vel(topleft(1):bottomright(1), bottomright(2):topleft(2));
-    vp = vel.n_vel(topleft(1):bottomright(1), bottomright(2):topleft(2));
+    up =  [u(centloc), u(topleft), u(topright), u(bottomright), u(bottomleft)];
+    vp = [v(centloc), v(topleft), v(topright), v(bottomright), v(bottomleft)];
 
-    
-    
-    %first step of Improved Euler is Forward Euler 
+   
+    %first step of Improved Euler is Forward Euler (this is the final
+    %position of the velocity data for the entire time window
     Xpstar=Xp+up*dt;
     Ypstar=Yp+vp*dt;
     %second step of Improved Euler
-
+    
     upstar=interp2(X,Y,u,Xpstar,Ypstar);
     vpstar=interp2(X,Y,v,Xpstar,Ypstar);
+    
     %final positions after each Improved Euler Time Step
     Xp=Xp+(up+upstar)/2*dt;
     Yp=Yp+(vp+vpstar)/2*dt;
@@ -221,19 +232,22 @@ end
 
 
 
-
-
-if plotting == 1
-    % CJT edit as needed.
+% 
+% 
+% if plotting == 1
+%     % CJT edit as needed.
     figure
     hold on
     greenlandmap
-    quiver(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
-    streamline(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
-    plot(Xp,Yp,'r*')
-end 
-
-
+    plot(Xpi(:), Ypi(:), '.r')
+    plot(Xpstar(:), Ypstar(:), '.g')
+%     
+%     %quiver(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
+%     %streamline(X(1:1:end, 1:1:end),Y(1:1:end, 1:1:end),u(1:1:end, 1:1:end),v(1:1:end, 1:1:end))
+%     %plot(Xp,Yp,'r*')
+% end 
+% 
+% 
 
 end %for ii = 1:length(centered_is2_locations)
 
