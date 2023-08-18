@@ -11,21 +11,21 @@ islauren = 0; %use lauren's paths if set to 1 , otherwise, use Christian's paths
 
 %% script features (CHECK CHECK CHECK)
 
-couplinglengthscale = (1:2);%(1:0.5:5); %determines how many and what lengthscales strain rates are calculated for.
+couplinglengthscale = (1:3);%(1:0.5:5); %determines how many and what lengthscales strain rates are calculated for.
 
-velocityerrrorquant = 'montecarlo'; %'none'; 'std' %this tells the script what type of velocity error analysis to use
+velocityerrrorquant = 'montecarlo'; %'none'; 'std'; 'montecarlo' %this tells the script what type of velocity error analysis to use
 numsim = 8; %100 % Velocity Perturbations - This is only used for the monte carlo simulations (the results will always be numsim +1 since the first calc will always be for the reported velocity
 numstd = 1; %use either 1 standard deviation or two. This applies to 'std' and 'montecarlo' error analysis. This needs to be aligned with the reported velocity errors.
 % 
 
-largeboundingboxsize = 80; %km, crops the vel and thick data to be more reasonable
+largeboundingboxsize = 30; %km, crops the vel and thick data to be more reasonable
 
 saveoutputs = 1; % if 1 = yes, if 0 = no -- Save output .mat files to the current directory for each centered_is2_location
 
 %% IS2 inputs
 
 Cycle = 2; % Change to correct IS2 cycle number based on laser_xy input for filename purposes
-Region = 'Petermann_Terminus_testing'; % Change region or glacier name for filename purposes
+Region = 'Petermann_Terminus'; % Change region or glacier name for filename purposes
 
 
 if islauren == 1
@@ -154,7 +154,7 @@ alphas = 0:9:90; %rotates 9* every loop
 X = vel.x;
 Y = vel.y;
 
-for ii = 1:length(is2roi)%:13 %length(is2roi) %This is for each crossover location
+for ii = 1:2%length(is2roi)%:13 %length(is2roi) %This is for each crossover location
     tic
     for jj = 1:numsim+1 %this is for each velocity perturbation
 
