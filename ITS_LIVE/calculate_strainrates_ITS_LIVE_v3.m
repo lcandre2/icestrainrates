@@ -137,7 +137,7 @@ disp('Finished Assigning Velocity Error Values (Line 136), Moving on to Strain R
 
 
 %% Calculate strain rates
-for i = length(vel) % For each velocity scene / granule
+for i = 1:length(vel) % For each velocity scene / granule
 % Set time steps
 if velocitydatasource == 1
     dt=vel.tbands(2) - vel.tbands(1);
@@ -237,7 +237,7 @@ for ii = 1:length(is2roi)%:13 %length(is2roi) %This is for each crossover locati
                     vpstar=interp2(Y,X,v_interp,Ypstar,Xpstar);
 
                     % Final positions after each Improved Euler Time Step
-                    Xp=Xp+(up+upstar)/2*dt
+                    Xp=Xp+(up+upstar)/2*dt;
                     Yp=Yp+(vp+vpstar)/2*dt;
 
                    
@@ -305,6 +305,8 @@ for ii = 1:length(is2roi)%:13 %length(is2roi) %This is for each crossover locati
                 ls(jj).xp(:,:,kk) = xpsave;
                 ls(jj).yp(:,:,kk) = ypsave;
                 ls(jj).lengthscale(kk) = couplinglengthscale(kk);
+
+                clear xpisave ypisave xpsave ypsave eresults
             %sprintf('Finished with length scale %d out of %d, Moving on to the next lengthscale',kk, length(couplinglengthscale))
         end %kk lengthscales 
             
@@ -357,7 +359,7 @@ output(i).velocityinfo.y_vel          = vel{i,1}.y;
 
 progressScene = sprintf('Finished with granule %d out of %d, Moving on to the next velocity scene',i, length(vel));
 disp(progressScene)
-end
+end % i for each vel scene
 
 
 
