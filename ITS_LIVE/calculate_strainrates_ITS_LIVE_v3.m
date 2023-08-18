@@ -11,21 +11,21 @@ islauren = 0; %use lauren's paths if set to 1 , otherwise, use Christian's paths
 
 %% script features (CHECK CHECK CHECK)
 
-couplinglengthscale = (1:2);%(1:0.5:5); %determines how many and what lengthscales strain rates are calculated for.
+couplinglengthscale = (1:3);%(1:0.5:5); %determines how many and what lengthscales strain rates are calculated for.
 
 velocityerrrorquant = 'montecarlo'; %'none'; 'std' %this tells the script what type of velocity error analysis to use
-numsim = 5; %100 % Velocity Perturbations - This is only used for the monte carlo simulations (the results will always be numsim +1 since the first calc will always be for the reported velocity
+numsim = 10; %100 % Velocity Perturbations - This is only used for the monte carlo simulations (the results will always be numsim +1 since the first calc will always be for the reported velocity
 numstd = 1; %use either 1 standard deviation or two. This applies to 'std' and 'montecarlo' error analysis. This needs to be aligned with the reported velocity errors.
 % 
 
-largeboundingboxsize = 60; %km, crops the vel and thick data to be more reasonable
+largeboundingboxsize = 50; %km, crops the vel and thick data to be more reasonable
 
 saveoutputs = 1; % if 1 = yes, if 0 = no -- Save output .mat files to the current directory for each centered_is2_location
 
 %% IS2 inputs
 
 Cycle = 2; % Change to correct IS2 cycle number based on laser_xy input for filename purposes
-Region = 'Petermann_Terminus_testing'; % Change region or glacier name for filename purposes
+Region = 'Petermann_Terminus_testing2'; % Change region or glacier name for filename purposes
 
 
 if islauren == 1
@@ -137,6 +137,10 @@ disp('Finished Assigning Velocity Error Values (Line 136), Moving on to Strain R
 
 
 %% Calculate strain rates
+
+XY_list = struct('xpi',[],'ypi',[],'xp',[],'yp',[]);
+strainrates = struct('vp',[],'crossoverROI',[],'crossoverthick',[],'roibederror',[]);
+
 for i = 1:length(vel) % For each velocity scene / granule
 % Set time steps
 if velocitydatasource == 1
@@ -324,8 +328,6 @@ for ii = 1:length(is2roi)%:13 %length(is2roi) %This is for each crossover locati
 end %ii crossover
 
 % Using the centered is2 location, generate a list (XY_list) of x and y coordinates matching the five points of the strain diamond coordinates (Xpi,Ypi) and the final positions (Xp,Yp) for each rotation and length scale.
-XY_list = struct('xpi',[],'ypi',[],'xp',[],'yp',[]);
-strainrates = struct('vp',[],'crossoverROI',[],'crossoverthick',[],'roibederror',[]);
 for ii = 1:size(is2roi,1) %was centered_is2_locations
     for jj = 1:size(couplinglengthscale,2)
         for kk = 1:size(numsim,2) % numsim was velperturb
